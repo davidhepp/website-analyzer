@@ -46,3 +46,9 @@ If you encounter issues:
 - Check that the table was created properly in Supabase
 - Review Supabase console logs for any errors
 - Check the browser console for client-side errors
+
+## Disclaimer
+
+This project contains code that is _mostly_ AI-generated and has been adjusted and tinkered with to suit a specific use case.
+
+While it works for the intended purpose, it may not be fully optimized or error-free. Feel free to explore, adapt, and improve it to better fit your needs!
