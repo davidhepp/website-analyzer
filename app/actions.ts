@@ -657,85 +657,306 @@ function addColorToMap(
 
 function detectFrameworks(html: string): string[] {
   const frameworks: string[] = [];
+  const detectedTech = new Set<string>();
 
-  // jQuery detection
-  if (html.includes("jquery") || html.includes("jQuery")) {
-    frameworks.push("jQuery");
-  }
+  // --------------- Frontend Frameworks/Libraries ---------------
 
-  // Bootstrap detection
+  // jQuery detection (more specific checks)
   if (
-    html.includes("bootstrap") ||
-    html.includes('class="btn btn-') ||
-    html.includes('class="container') ||
-    html.includes('class="row') ||
-    html.includes('class="col-')
+    html.includes("jquery.min.js") ||
+    html.includes("jquery.js") ||
+    html.includes("jQuery(") ||
+    html.includes("$.ajax") ||
+    html.match(/jquery[.-](\d+\.\d+\.\d+)/)
   ) {
-    frameworks.push("Bootstrap");
+    detectedTech.add("jQuery");
   }
 
-  // React detection
+  // Bootstrap detection (improved)
   if (
-    html.includes("react") ||
-    html.includes("React") ||
-    html.includes("_reactRootContainer") ||
-    html.includes("__NEXT_DATA__")
-  ) {
-    frameworks.push("React");
-  }
-
-  // Vue detection
-  if (
-    html.includes("vue") ||
-    html.includes("Vue") ||
-    html.includes("__vue__")
-  ) {
-    frameworks.push("Vue.js");
-  }
-
-  // Angular detection
-  if (
-    html.includes("ng-") ||
-    html.includes("angular") ||
-    html.includes("Angular")
-  ) {
-    frameworks.push("Angular");
-  }
-
-  // Tailwind detection
-  if (
+    html.includes("bootstrap.min.css") ||
+    html.includes("bootstrap.bundle.min.js") ||
+    html.includes("bootstrap.min.js") ||
     html.match(
-      /class="[^"]*(?:flex|grid|text-\w+|bg-\w+|p-\d+|m-\d+)[^"]*"/i
+      /class="[^"]*\b(btn-primary|navbar-expand|container-fluid|row|col-(xs|sm|md|lg|xl)-\d+)\b/
     ) ||
-    html.includes("tailwind")
+    html.match(/data-bs-(toggle|target|dismiss)=/)
   ) {
-    frameworks.push("Tailwind CSS");
+    detectedTech.add("Bootstrap");
   }
+
+  // React detection (improved)
+  if (
+    html.includes("react.production.min.js") ||
+    html.includes("react.development.js") ||
+    html.includes("react-dom.production.min.js") ||
+    html.includes("_reactRootContainer") ||
+    html.includes("__REACT_DEVTOOLS_GLOBAL_HOOK__") ||
+    html.includes("data-reactroot") ||
+    html.includes("data-reactid")
+  ) {
+    detectedTech.add("React");
+  }
+
+  // Next.js detection
+  if (
+    html.includes("__NEXT_DATA__") ||
+    html.includes("next/dist") ||
+    html.includes("/_next/")
+  ) {
+    detectedTech.add("Next.js");
+    detectedTech.add("React"); // Next.js is based on React
+  }
+
+  // Vue detection (improved)
+  if (
+    html.includes("vue.min.js") ||
+    html.includes("vue.js") ||
+    html.includes("vue@") ||
+    html.includes("__vue__") ||
+    html.match(/data-v-[a-f0-9]{8}/) ||
+    html.match(/<[^>]+v-[a-z]+/) || // Vue directives like v-if, v-for
+    html.includes("Vue.createApp") ||
+    html.includes("new Vue")
+  ) {
+    detectedTech.add("Vue.js");
+  }
+
+  // Nuxt.js detection
+  if (html.includes("/__nuxt/") || html.includes("window.__NUXT__")) {
+    detectedTech.add("Nuxt.js");
+    detectedTech.add("Vue.js"); // Nuxt.js is based on Vue
+  }
+
+  // Angular detection (improved)
+  if (
+    html.includes("angular.min.js") ||
+    html.includes("angular.js") ||
+    html.match(/ng-[a-z]+="[^"]*"/) ||
+    html.match(/ng-[a-z]+='[^']*'/) ||
+    html.match(/\[\[angular\.[a-z]+/) ||
+    html.includes("ng-app") ||
+    html.includes("ng-controller") ||
+    html.includes("ng-model") ||
+    html.match(/_ng(content|host)/)
+  ) {
+    detectedTech.add("Angular");
+  }
+
+  // Angular 2+ specific detection
+  if (
+    (html.includes("zone.js") &&
+      html.includes("polyfills") &&
+      (html.includes("angular") || html.includes("ng-"))) ||
+    html.match(/_ngcontent-[a-z0-9-]+/) ||
+    html.match(/_nghost-[a-z0-9-]+/)
+  ) {
+    detectedTech.add("Angular (Modern)");
+  }
+
+  // Tailwind CSS detection (improved)
+  if (
+    html.includes("tailwind.css") ||
+    html.includes("tailwindcss") ||
+    html.match(
+      /class="[^"]*\b(flex|grid|space-x-\d|text-\w+-\d+|bg-\w+-\d+|p-\d+|m-\d+|rounded-[a-z]+)\b[^"]*"/i
+    ) ||
+    html.match(
+      /class='[^']*\b(flex|grid|space-x-\d|text-\w+-\d+|bg-\w+-\d+|p-\d+|m-\d+|rounded-[a-z]+)\b[^']*'/i
+    )
+  ) {
+    detectedTech.add("Tailwind CSS");
+  }
+
+  // Svelte detection
+  if (
+    html.includes("svelte") ||
+    html.match(/svelte-[a-z0-9]{6}/) ||
+    html.match(/svelte-[a-z0-9]{6}-[a-z]+/)
+  ) {
+    detectedTech.add("Svelte");
+  }
+
+  // Materialize CSS detection
+  if (
+    html.includes("materialize.min.css") ||
+    html.includes("materialize.css") ||
+    html.includes("materialize.min.js") ||
+    html.match(/class="[^"]*\b(waves-effect|card-panel|material-icons)\b/)
+  ) {
+    detectedTech.add("Materialize CSS");
+  }
+
+  // Foundation detection (improved)
+  if (
+    html.includes("foundation.min.css") ||
+    html.includes("foundation.css") ||
+    html.includes("foundation.min.js") ||
+    (html.match(
+      /class="[^"]*\b(top-bar|button|callout|small-\d+|medium-\d+|large-\d+)\b[^"]*"/i
+    ) &&
+      html.includes("foundation"))
+  ) {
+    detectedTech.add("Foundation");
+  }
+
+  // Bulma detection (improved)
+  if (
+    html.includes("bulma.min.css") ||
+    html.includes("bulma.css") ||
+    (html.match(
+      /class="[^"]*\b(columns|column|notification|box|button is-|navbar|hero is-|section)\b[^"]*"/i
+    ) &&
+      !html.includes("bootstrap")) // Avoid false positives
+  ) {
+    detectedTech.add("Bulma");
+  }
+
+  // --------------- CMS & Server-side Frameworks ---------------
 
   // WordPress detection
-  if (html.includes("wp-content") || html.includes("wp-includes")) {
-    frameworks.push("WordPress");
-  }
-
-  // Materialize detection
-  if (html.includes("materialize")) {
-    frameworks.push("Materialize");
-  }
-
-  // Foundation detection
-  if (html.includes("foundation")) {
-    frameworks.push("Foundation");
-  }
-
-  // Bulma detection
   if (
-    html.includes("bulma") ||
-    html.match(/class="[^"]*(?:columns|column)[^"]*"/i)
+    html.includes("wp-content") ||
+    html.includes("wp-includes") ||
+    html.includes("wp-json") ||
+    html.includes("wp-admin") ||
+    html.includes("wp-embed.min.js")
   ) {
-    frameworks.push("Bulma");
+    detectedTech.add("WordPress");
   }
 
-  return frameworks;
+  // Django detection
+  if (
+    html.includes("csrfmiddlewaretoken") ||
+    html.includes("__django") ||
+    html.includes("django") ||
+    html.includes("DJANGO_SETTINGS_MODULE") ||
+    html.includes("Powered by Django")
+  ) {
+    detectedTech.add("Django");
+  }
+
+  // Ruby on Rails detection
+  if (
+    (html.includes("csrf-param") && html.includes("csrf-token")) ||
+    html.includes("data-turbolinks") ||
+    html.includes("rails-ujs") ||
+    html.includes("/assets/rails") ||
+    html.includes("ruby on rails")
+  ) {
+    detectedTech.add("Ruby on Rails");
+  }
+
+  // Laravel detection
+  if (
+    html.includes("Laravel") ||
+    html.includes("laravel") ||
+    (html.includes("csrf-token") &&
+      (html.includes("app.js") || html.includes("app.css"))) ||
+    html.includes("x-csrf-token") ||
+    html.includes("Powered by Laravel")
+  ) {
+    detectedTech.add("Laravel");
+  }
+
+  // Express.js/Node.js detection
+  if (
+    html.includes("Express") ||
+    html.includes("express") ||
+    html.includes("node_modules") ||
+    html.includes("Powered by Express") ||
+    html.includes("X-Powered-By: Express")
+  ) {
+    detectedTech.add("Express.js/Node.js");
+  }
+
+  // ASP.NET detection
+  if (
+    html.includes("__VIEWSTATE") ||
+    html.includes("__EVENTVALIDATION") ||
+    html.includes("asp.net") ||
+    html.includes("ASP.NET") ||
+    html.includes("microsoft.aspnetcore")
+  ) {
+    detectedTech.add("ASP.NET");
+  }
+
+  // PHP detection
+  if (
+    html.includes("Powered by PHP") ||
+    html.includes(".php") ||
+    html.includes("PHP/") ||
+    html.includes("PHPSESSID")
+  ) {
+    detectedTech.add("PHP");
+  }
+
+  // --------------- E-commerce Platforms ---------------
+
+  // Shopify detection
+  if (
+    html.includes("Shopify.") ||
+    html.includes("shopify") ||
+    html.includes("/cdn.shopify.com/") ||
+    html.includes("myshopify.com")
+  ) {
+    detectedTech.add("Shopify");
+  }
+
+  // WooCommerce detection
+  if (
+    html.includes("woocommerce") ||
+    html.includes("WooCommerce") ||
+    html.includes("wc-") ||
+    (html.includes("cart-contents") && html.includes("wp-content"))
+  ) {
+    detectedTech.add("WooCommerce");
+    detectedTech.add("WordPress"); // WooCommerce is a WordPress plugin
+  }
+
+  // Magento detection
+  if (
+    html.includes("Magento") ||
+    html.includes("magento") ||
+    html.includes("Mage.") ||
+    html.includes("/skin/frontend/")
+  ) {
+    detectedTech.add("Magento");
+  }
+
+  // --------------- Javascript Utility Libraries ---------------
+
+  // Lodash detection
+  if (
+    html.includes("lodash.min.js") ||
+    html.includes("lodash.js") ||
+    html.includes("_.debounce") ||
+    html.includes("_.throttle")
+  ) {
+    detectedTech.add("Lodash");
+  }
+
+  // Moment.js detection
+  if (
+    html.includes("moment.min.js") ||
+    html.includes("moment.js") ||
+    html.includes("moment-with-locales")
+  ) {
+    detectedTech.add("Moment.js");
+  }
+
+  // Axios detection
+  if (
+    html.includes("axios.min.js") ||
+    html.includes("axios.js") ||
+    html.includes("axios.get(") ||
+    html.includes("axios.post(")
+  ) {
+    detectedTech.add("Axios");
+  }
+
+  // Convert Set to array and return
+  return Array.from(detectedTech);
 }
 
 function extractImages(root: any, baseUrl: string): string[] {

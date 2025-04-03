@@ -77,19 +77,172 @@ export function AnalysisResults({ results }: AnalysisResultsProps) {
       </TabsContent>
       <TabsContent value="frameworks" className="mt-6">
         <h2 className="text-xl font-semibold mb-4">
-          Detected Frameworks (might not be 100% accurate)
+          Detected Technologies (not 100% accurate)
         </h2>
         {results.frameworks.length === 0 ? (
-          <p className="text-muted-foreground">No frameworks detected.</p>
+          <p className="text-muted-foreground">
+            No frameworks or technologies detected.
+          </p>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {results.frameworks.map((framework, index) => (
-              <Card key={index}>
-                <CardContent className="p-4">
-                  <div className="font-medium">{framework}</div>
-                </CardContent>
-              </Card>
-            ))}
+          <div className="space-y-6">
+            {/* Group frameworks by type */}
+            <div>
+              <h3 className="text-md font-medium mb-3">
+                Frontend Technologies
+              </h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                {results.frameworks
+                  .filter((tech) =>
+                    [
+                      "React",
+                      "Next.js",
+                      "Vue.js",
+                      "Nuxt.js",
+                      "Angular",
+                      "Angular (Modern)",
+                      "jQuery",
+                      "Svelte",
+                      "Tailwind CSS",
+                      "Bootstrap",
+                      "Materialize CSS",
+                      "Foundation",
+                      "Bulma",
+                      "Lodash",
+                      "Moment.js",
+                      "Axios",
+                    ].includes(tech)
+                  )
+                  .map((framework, index) => (
+                    <Card key={`frontend-${index}`}>
+                      <CardContent className="p-3">
+                        <div className="font-medium">{framework}</div>
+                      </CardContent>
+                    </Card>
+                  ))}
+              </div>
+            </div>
+
+            {/* Backend & CMS frameworks */}
+            {results.frameworks.some((tech) =>
+              [
+                "PHP",
+                "Django",
+                "Ruby on Rails",
+                "Laravel",
+                "Express.js/Node.js",
+                "ASP.NET",
+                "WordPress",
+                "Shopify",
+                "WooCommerce",
+                "Magento",
+              ].includes(tech)
+            ) && (
+              <div>
+                <h3 className="text-md font-medium mb-3">Backend & CMS</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                  {results.frameworks
+                    .filter((tech) =>
+                      [
+                        "PHP",
+                        "Django",
+                        "Ruby on Rails",
+                        "Laravel",
+                        "Express.js/Node.js",
+                        "ASP.NET",
+                        "WordPress",
+                        "Shopify",
+                        "WooCommerce",
+                        "Magento",
+                      ].includes(tech)
+                    )
+                    .map((framework, index) => (
+                      <Card key={`backend-${index}`}>
+                        <CardContent className="p-3">
+                          <div className="font-medium">{framework}</div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                </div>
+              </div>
+            )}
+
+            {/* Other technologies that don't fit the categories above */}
+            {results.frameworks.some(
+              (tech) =>
+                ![
+                  "React",
+                  "Next.js",
+                  "Vue.js",
+                  "Nuxt.js",
+                  "Angular",
+                  "Angular (Modern)",
+                  "jQuery",
+                  "Svelte",
+                  "Tailwind CSS",
+                  "Bootstrap",
+                  "Materialize CSS",
+                  "Foundation",
+                  "Bulma",
+                  "PHP",
+                  "Django",
+                  "Ruby on Rails",
+                  "Laravel",
+                  "Express.js/Node.js",
+                  "ASP.NET",
+                  "WordPress",
+                  "Shopify",
+                  "WooCommerce",
+                  "Magento",
+                  "Lodash",
+                  "Moment.js",
+                  "Axios",
+                ].includes(tech)
+            ) && (
+              <div>
+                <h3 className="text-md font-medium mb-3">Other Technologies</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                  {results.frameworks
+                    .filter(
+                      (tech) =>
+                        ![
+                          "React",
+                          "Next.js",
+                          "Vue.js",
+                          "Nuxt.js",
+                          "Angular",
+                          "Angular (Modern)",
+                          "jQuery",
+                          "Svelte",
+                          "Tailwind CSS",
+                          "Bootstrap",
+                          "Materialize CSS",
+                          "Foundation",
+                          "Bulma",
+                          "PHP",
+                          "Django",
+                          "Ruby on Rails",
+                          "Laravel",
+                          "Express.js/Node.js",
+                          "ASP.NET",
+                          "WordPress",
+                          "Shopify",
+                          "WooCommerce",
+                          "Magento",
+                          "Lodash",
+                          "Moment.js",
+                          "Axios",
+                        ].includes(tech)
+                    )
+                    .map((framework, index) => (
+                      <Card key={`other-${index}`}>
+                        <CardContent className="p-3">
+                          <div className="font-medium">{framework}</div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                </div>
+              </div>
+            )}
           </div>
         )}
       </TabsContent>
