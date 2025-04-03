@@ -322,7 +322,7 @@ function processButtonsAndLinks(root: any, colorMap: Map<string, Set<string>>) {
       }
 
       // Check for other color-related classes
-      classNames.forEach((className) => {
+      classNames.forEach((className: string) => {
         if (
           className.startsWith("text-") ||
           className.startsWith("bg-") ||
@@ -365,7 +365,7 @@ function processButtonsAndLinks(root: any, colorMap: Map<string, Set<string>>) {
       const classNames = classes.split(/\s+/);
 
       // Check for color-related classes
-      classNames.forEach((className) => {
+      classNames.forEach((className: string) => {
         if (
           className.startsWith("text-") ||
           className.startsWith("bg-") ||
@@ -464,7 +464,7 @@ function processElement(
       const classNames = classes.split(/\s+/);
 
       // Check for color-related classes
-      classNames.forEach((className) => {
+      classNames.forEach((className: string) => {
         if (
           className.startsWith("text-") ||
           className.startsWith("bg-") ||
@@ -656,63 +656,83 @@ function addColorToMap(
 }
 
 function detectFrameworks(html: string): string[] {
-  const frameworks = [];
+  const frameworks: string[] = [];
 
-  // Check for common frameworks
+  // jQuery detection
+  if (html.includes("jquery") || html.includes("jQuery")) {
+    frameworks.push("jQuery");
+  }
+
+  // Bootstrap detection
   if (
-    html.includes("bootstrap.min.css") ||
-    html.includes("bootstrap.css") ||
-    html.includes('class="btn')
+    html.includes("bootstrap") ||
+    html.includes('class="btn btn-') ||
+    html.includes('class="container') ||
+    html.includes('class="row') ||
+    html.includes('class="col-')
   ) {
     frameworks.push("Bootstrap");
   }
 
+  // React detection
   if (
-    html.includes("tailwind.css") ||
-    html.includes("tailwind.min.css") ||
-    (html.includes('class="') && html.match(/class="[^"]*flex[^"]*"/))
-  ) {
-    frameworks.push("Tailwind CSS");
-  }
-
-  if (html.includes("material-ui") || html.includes("mui")) {
-    frameworks.push("Material UI");
-  }
-
-  if (html.includes("bulma.css") || html.includes("bulma.min.css")) {
-    frameworks.push("Bulma");
-  }
-
-  if (html.includes("foundation.css") || html.includes("foundation.min.css")) {
-    frameworks.push("Foundation");
-  }
-
-  if (html.includes("semantic-ui") || html.includes("semantic.min.css")) {
-    frameworks.push("Semantic UI");
-  }
-
-  if (html.includes("jquery.js") || html.includes("jquery.min.js")) {
-    frameworks.push("jQuery");
-  }
-
-  if (
-    html.includes("react.js") ||
-    html.includes("react.min.js") ||
-    html.includes("react-dom")
+    html.includes("react") ||
+    html.includes("React") ||
+    html.includes("_reactRootContainer") ||
+    html.includes("__NEXT_DATA__")
   ) {
     frameworks.push("React");
   }
 
-  if (html.includes("vue.js") || html.includes("vue.min.js")) {
+  // Vue detection
+  if (
+    html.includes("vue") ||
+    html.includes("Vue") ||
+    html.includes("__vue__")
+  ) {
     frameworks.push("Vue.js");
   }
 
+  // Angular detection
   if (
-    html.includes("angular.js") ||
-    html.includes("angular.min.js") ||
-    html.includes("ng-app")
+    html.includes("ng-") ||
+    html.includes("angular") ||
+    html.includes("Angular")
   ) {
     frameworks.push("Angular");
+  }
+
+  // Tailwind detection
+  if (
+    html.match(
+      /class="[^"]*(?:flex|grid|text-\w+|bg-\w+|p-\d+|m-\d+)[^"]*"/i
+    ) ||
+    html.includes("tailwind")
+  ) {
+    frameworks.push("Tailwind CSS");
+  }
+
+  // WordPress detection
+  if (html.includes("wp-content") || html.includes("wp-includes")) {
+    frameworks.push("WordPress");
+  }
+
+  // Materialize detection
+  if (html.includes("materialize")) {
+    frameworks.push("Materialize");
+  }
+
+  // Foundation detection
+  if (html.includes("foundation")) {
+    frameworks.push("Foundation");
+  }
+
+  // Bulma detection
+  if (
+    html.includes("bulma") ||
+    html.match(/class="[^"]*(?:columns|column)[^"]*"/i)
+  ) {
+    frameworks.push("Bulma");
   }
 
   return frameworks;
@@ -722,57 +742,86 @@ function extractImages(root: any, baseUrl: string): string[] {
   const images = new Set<string>();
   const imgElements = root.querySelectorAll("img");
 
+  // Helper function to normalize URLs
+  const normalizeUrl = (src: string): string => {
+    // Handle data URLs and absolute URLs
+    if (src.startsWith("data:") || src.startsWith("http")) {
+      return src;
+    }
+
+    try {
+      const url = new URL(baseUrl);
+
+      // Handle absolute paths that start with /
+      if (src.startsWith("/")) {
+        return `${url.origin}${src}`;
+      }
+
+      // Handle relative paths
+      // Make sure we don't duplicate slashes if the baseUrl already ends with /
+      const base = url.href.endsWith("/") ? url.href.slice(0, -1) : url.href;
+      return `${base}/${src.startsWith("./") ? src.substring(2) : src}`;
+    } catch (e) {
+      // If URL parsing fails, return as is
+      return src;
+    }
+  };
+
+  // Process img tags
   imgElements.forEach((img: any) => {
     let src = img.getAttribute("src");
     if (src) {
-      // Handle relative URLs
-      if (src.startsWith("/")) {
-        try {
-          const url = new URL(baseUrl);
-          src = `${url.origin}${src}`;
-        } catch (e) {
-          // If URL parsing fails, use as is
-        }
-      } else if (!src.startsWith("http")) {
-        try {
-          const url = new URL(baseUrl);
-          src = `${url.origin}/${src}`;
-        } catch (e) {
-          // If URL parsing fails, use as is
-        }
-      }
+      images.add(normalizeUrl(src));
+    }
 
-      images.add(src);
+    // Also check data-src for lazy-loaded images
+    const dataSrc = img.getAttribute("data-src");
+    if (dataSrc) {
+      images.add(normalizeUrl(dataSrc));
     }
   });
 
-  // Also check for background images in inline styles
+  // Check for background images in inline styles
   const elementsWithStyle = root.querySelectorAll("[style]");
   elementsWithStyle.forEach((el: any) => {
     const style = el.getAttribute("style");
-    if (style && style.includes("background-image")) {
-      const match = style.match(/url$$['"]?([^'"]+)['"]?$$/i);
-      if (match && match[1]) {
-        let src = match[1];
-
-        // Handle relative URLs
-        if (src.startsWith("/")) {
-          try {
-            const url = new URL(baseUrl);
-            src = `${url.origin}${src}`;
-          } catch (e) {
-            // If URL parsing fails, use as is
+    if (style && style.includes("background")) {
+      // Match url() patterns with various quotes
+      const matches = style.match(/url\(['"]?([^'"()]+)['"]?\)/gi);
+      if (matches) {
+        matches.forEach((match: string) => {
+          const urlMatch = match.match(/url\(['"]?([^'"()]+)['"]?\)/i);
+          if (urlMatch && urlMatch[1]) {
+            images.add(normalizeUrl(urlMatch[1]));
           }
-        } else if (!src.startsWith("http")) {
-          try {
-            const url = new URL(baseUrl);
-            src = `${url.origin}/${src}`;
-          } catch (e) {
-            // If URL parsing fails, use as is
-          }
-        }
+        });
+      }
+    }
+  });
 
-        images.add(src);
+  // Check for background images in CSS stylesheets
+  const styleElements = root.querySelectorAll("style");
+  styleElements.forEach((style: any) => {
+    const cssText = style.text || style.innerHTML;
+    if (cssText) {
+      const matches = cssText.match(/url\(['"]?([^'"()]+)['"]?\)/gi);
+      if (matches) {
+        matches.forEach((match: string) => {
+          const urlMatch = match.match(/url\(['"]?([^'"()]+)['"]?\)/i);
+          if (urlMatch && urlMatch[1]) {
+            // Ignore data URLs and font files
+            const src = urlMatch[1];
+            if (
+              !src.startsWith("data:") &&
+              !src.endsWith(".woff") &&
+              !src.endsWith(".woff2") &&
+              !src.endsWith(".ttf") &&
+              !src.endsWith(".eot")
+            ) {
+              images.add(normalizeUrl(src));
+            }
+          }
+        });
       }
     }
   });
