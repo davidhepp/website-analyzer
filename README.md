@@ -4,7 +4,7 @@ A tool to analyze websites for colors, frameworks, and images.
 
 ## Supabase Setup Instructions
 
-This project now uses Supabase for persistent storage. Follow these steps to set up your database:
+This project uses Supabase for persistent storage. Follow these steps to set up your database:
 
 1. **Create a Supabase Project**
 
